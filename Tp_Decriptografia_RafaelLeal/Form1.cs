@@ -72,9 +72,10 @@ namespace Tp_Decriptografia_RafaelLeal
                     FileStream le = new FileStream(arqCriptografado, FileMode.Open);
                     BinaryReader br = new BinaryReader(le);
 
-                    byte[] bytesTexto = br.ReadBytes((int)le.Length);
-                    char[] textoCriptografado = Encoding.UTF8.GetString(bytesTexto).ToCharArray();
-                    char[] textoDecriptografado = new char[textoCriptografado.Length];
+                    byte[] buffer = br.ReadBytes((int)le.Length);
+
+                    char[] textoDecriptografado = new char[buffer.Length];
+
 
                     char[] textoChave = txtChave.Text.ToCharArray();
                     long valorChave = 0;
@@ -98,37 +99,42 @@ namespace Tp_Decriptografia_RafaelLeal
                         { '=', 'G', 'L', 'S', 'y', 'W', '7', '9' }
                     };
 
-                    for (int i = 0; i < textoCriptografado.Length;)
+
+
+                    int l = 0;
+                    int c = 0;
+                    int x = 0;
+
+                    for (int i = 0; i < buffer.Length;)
                     {
 
-                        int l = 0;
-                        int c = i;
-
-
-                        while ((c < subBytes.GetLength(0)) && (i < textoCriptografado.Length))
+                        if (!(c < subBytes.GetLength(0)) && (l < subBytes.GetLength(1)))
+                        {
+                            c = 0;
+                            l++;                                                     
+                        }
+                        else if (!(l < subBytes.GetLength(1)))
+                        {
+                            l = 0;
+                            c = 0;
+                        }
+                        else
                         {
 
                             char valorVetor = subBytes[l, c];
+                            long longCriptografado = 0;
+                            longCriptografado = BitConverter.ToInt64(buffer, i);
+                            long resultado = longCriptografado - valorChave - valorVetor;
 
-
-                            textoDecriptografado[i] = (char)(textoCriptografado[i] - valorChave - valorVetor);
+                            textoDecriptografado[x] = (char)resultado;
 
                             c++;
-                            i++;
-
-                            if (!(c < subBytes.GetLength(0)) && (l < subBytes.GetLength(1)))
-                            {
-                                c = 0;
-                                l++;
-                                i++;
-                            }
-                            if (!(l < subBytes.GetLength(1)))
-                            {
-                                l = 0;
-                                c = 0;
-                            }
-
+                            x++;
+                            i += 8;
                         }
+
+
+                    }
 
                         FileStream escreve = new FileStream(arqDecriptografado, FileMode.Open);
                         BinaryWriter bw = new BinaryWriter(escreve);
@@ -143,7 +149,7 @@ namespace Tp_Decriptografia_RafaelLeal
                         br.Close();
                         bw.Close();
 
-                    }
+                    
                 }
                 catch
                 {
